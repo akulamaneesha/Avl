@@ -1,0 +1,225 @@
+class Node {
+constructor(value) {
+this.value = value;
+this.left = null;
+this.right = null;
+this.height = 1;
+}
+}
+
+let root = null;
+
+function height(node) {
+return node ? node.height : 0;
+}
+
+function updateHeight(node) {
+node.height = 1 + Math.max(height(node.left), height(node.right));
+}
+
+function balanceFactor(node) {
+return node ? height(node.left) - height(node.right) : 0;
+}
+
+function rotateRight(y) {
+const x = y.left;
+const subtree = x.right;
+
+x.right = y;
+y.left = subtree;
+
+updateHeight(y);
+updateHeight(x);
+return x;
+}
+
+function rotateLeft(x) {
+const y = x.right;
+const subtree = y.left;
+
+y.left = x;
+x.right = subtree;
+
+updateHeight(x);
+updateHeight(y);
+return y;
+}
+
+function insert(node, value) {
+if (!node) return new Node(value);
+
+if (value < node.value) {
+node.left = insert(node.left, value);
+} else if (value > node.value) {
+node.right = insert(node.right, value);
+} else {
+return node; // Ignore duplicate values
+}
+
+updateHeight(node);
+const balance = balanceFactor(node);
+
+if (balance > 1 && value < node.left.value) return rotateRight(node);
+if (balance < -1 && value > node.right.value) return rotateLeft(node);
+
+if (balance > 1 && value > node.left.value) {
+node.left = rotateLeft(node.left);
+return rotateRight(node);
+}
+
+if (balance < -1 && value < node.right.value) {
+node.right = rotateRight(node.right);
+return rotateLeft(node);
+}
+
+return node;
+}
+
+function minimumNode(node) {
+while (node.left) node = node.left;
+return node;
+}
+
+function remove(node, value) {
+if (!node) return null;
+
+if (value < node.value) {
+node.left = remove(node.left, value);
+} else if (value > node.value) {
+node.right = remove(node.right, value);
+} else if (!node.left || !node.right) {
+node = node.left || node.right;
+} else {
+const successor = minimumNode(node.right);
+node.value = successor.value;
+node.right = remove(node.right, successor.value);
+}
+
+if (!node) return null;
+
+updateHeight(node);
+const balance = balanceFactor(node);
+
+if (balance > 1 && balanceFactor(node.left) >= 0) {
+return rotateRight(node);
+}
+
+if (balance > 1 && balanceFactor(node.left) < 0) {
+node.left = rotateLeft(node.left);
+return rotateRight(node);
+}
+
+if (balance < -1 && balanceFactor(node.right) <= 0) {
+return rotateLeft(node);
+}
+
+if (balance < -1 && balanceFactor(node.right) > 0) {
+node.right = rotateRight(node.right);
+return rotateLeft(node);
+}
+
+return node;
+}
+
+function drawTree() {
+const container = document.getElementById("tree");
+container.innerHTML = "";
+
+if (!root) {
+container.innerHTML = '<div class="empty">The tree is empty.</div>';
+return;
+}
+
+const levels = height(root);
+const width = Math.max(600, Math.pow(2, Math.min(levels, 8)) * 70);
+const levelGap = 75;
+const svgHeight = levels * levelGap + 40;
+
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", width);
+svg.setAttribute("height", svgHeight);
+container.appendChild(svg);
+
+function drawNode(node, x, y, gap, parentX, parentY) {
+if (!node) return;
+
+if (parentX !== null) {
+const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+line.setAttribute("x1", parentX);
+line.setAttribute("y1", parentY);
+line.setAttribute("x2", x);
+line.setAttribute("y2", y);
+line.setAttribute("class", "edge");
+svg.appendChild(line);
+}
+
+const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+group.setAttribute("class", "node");
+
+const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+circle.setAttribute("cx", x);
+circle.setAttribute("cy", y);
+circle.setAttribute("r", 22);
+
+const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+text.setAttribute("x", x);
+text.setAttribute("y", y);
+text.textContent = node.value;
+
+group.append(circle, text);
+svg.appendChild(group);
+
+drawNode(node.left, x - gap, y + levelGap, gap / 2, x, y);
+drawNode(node.right, x + gap, y + levelGap, gap / 2, x, y);
+}
+
+drawNode(root, width / 2, 30, width / 4, null, null);
+}
+
+const input = document.getElementById("valueInput");
+const message = document.getElementById("message");
+
+function getValue() {
+const value = Number(input.value);
+
+if (input.value.trim() === "" || !Number.isFinite(value)) {
+message.textContent = "Please enter a valid number.";
+return null;
+}
+
+return value;
+}
+
+document.getElementById("insertButton").addEventListener("click", () => {
+const value = getValue();
+if (value === null) return;
+
+root = insert(root, value);
+message.textContent = `Inserted ${value} (duplicates are ignored).`;
+input.value = "";
+drawTree();
+});
+
+document.getElementById("deleteButton").addEventListener("click", () => {
+const value = getValue();
+if (value === null) return;
+
+root = remove(root, value);
+message.textContent = `Removed ${value}, if it was in the tree.`;
+input.value = "";
+drawTree();
+});
+
+document.getElementById("clearButton").addEventListener("click", () => {
+root = null;
+message.textContent = "Tree cleared.";
+drawTree();
+});
+
+input.addEventListener("keydown", event => {
+if (event.key === "Enter") {
+document.getElementById("insertButton").click();
+}
+});
+
+drawTree();

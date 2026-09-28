@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVL Tree Visualizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<h1>AVL Tree Visualizer</h1>
+<p>Enter a number to insert or delete it from the tree.</p>
+
+<div class="controls">
+<input id="valueInput" type="number" placeholder="Enter a number">
+<button id="insertButton">Insert</button>
+<button id="deleteButton" class="delete">Delete</button>
+<button id="clearButton">Clear</button>
+</div>
+
+<div id="message" aria-live="polite"></div>
+<div id="tree" class="tree-container"></div>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
